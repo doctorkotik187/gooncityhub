@@ -56,3 +56,9 @@ You can check your [configuration](config/development.yaml) to pick either front
 ## Getting help
 
 Check out [a quick tour](https://loco.rs/docs/getting-started/tour/) or [the complete guide](https://loco.rs/docs/getting-started/guide/).
+
+## Start Dev DB Container
+
+```sh
+podman run -d --name postgres -e POSTGRES_USER=loco -e POSTGRES_PASSWORD=loco -e POSTGRES_DB=gooncityhub -p 5432:5432 postgres:18
+```
