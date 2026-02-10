@@ -1,0 +1,39 @@
+* Coding Gamification
+
+What is winning?
+
+Winning is determined by *Project Health*.
+
+** Project Health
+
+- Stars / Forks (user feedback)
+- Pick "random", important, hidden Issues, PRs and look how long it takes the project to fix them
+- releases (should be somewhat frequent)
+
+** MMR
+
+- both global leaderboard rank and 1v1 MMR
+- matchmaking like in league or clashofclans
+
+** Battle Time
+
+- constant lop of everything / actions going on in both repos
+- all chat for "friendly" banter
+- voting from community, maybe the dude who opened the issue / pr
+- top player -> mid player -> last player (rookie)
+
+** Misc Ideas
+
+- fixed team size: 1v1, 3v3, 5v5, 10v10; but not more than 10, the project should send only their best
+- dev setup information (as tags maybe) for each member (optional)
+- streaks / combos ?!
+- repo can use "protection" (for holidays, to avoid battle / being attacked)
+- battle period ~1 month
+
+** Battle Outcome Evaluation
+
+- MMR calculation (maybe archievements, rewards)
+- leaderboard updates
+- top contributors
+- history / everything recorded forever
+- post battle winner and loser have a "cooldown" period
