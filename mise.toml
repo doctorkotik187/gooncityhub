@@ -1,2 +1,4 @@
 [tools]
+"cargo:loco" = "latest"
+"cargo:sea-orm-cli" = "latest"
 rust = "latest"
