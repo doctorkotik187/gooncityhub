@@ -2,7 +2,6 @@ pub use super::_entities::repos::{ActiveModel, Entity, Model};
 use loco_rs::prelude::ActiveValue::NotSet;
 use loco_rs::prelude::Set;
 use octocrab::{models::Repository, Octocrab};
-use sea_orm::entity::prelude::*;
 pub type Repos = Entity;
 
 use crate::models::projects::{ActiveModel as ProjectActiveModel, Model as ProjectModel};

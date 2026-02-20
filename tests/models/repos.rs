@@ -32,7 +32,7 @@ async fn test_fetch_github_repo() {
     assert!(repo.stars > 0);
 
     // Verify saved to DB
-    let from_db = Entity::find()
+    Entity::find()
         .filter(gooncityhub::models::_entities::repos::Column::Owner.eq("XAMPPRocky"))
         .one(&boot.app_context.db)
         .await

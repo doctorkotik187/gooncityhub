@@ -4,21 +4,21 @@ assertion_line: 42
 expression: repo
 ---
 Model {
-    created_at: 2026-02-20T14:25:36.725187+00:00,
-    updated_at: 2026-02-20T14:25:36.725187+00:00,
+    created_at: 2026-02-20T20:33:03.445121+00:00,
+    updated_at: 2026-02-20T20:33:03.445121+00:00,
     id: 1,
     name: "octocrab",
     owner: "XAMPPRocky",
-    stars: 1326,
+    stars: 1327,
     forks: 324,
     issues: 107,
     prs: 0,
     contributors: 0,
     commits_last_30d: 0,
-    watchers: 1326,
+    watchers: 1327,
     license: Some(
         "Other",
     ),
-    last_fetch: 2026-02-20T14:25:36.682640,
+    last_fetch: 2026-02-20T20:33:03.401406,
     project_id: 1,
 }
