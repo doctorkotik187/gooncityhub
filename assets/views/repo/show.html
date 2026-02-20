@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}
+View repo: {{ item.id }}
+{% endblock title %}
+
+{% block content %}
+<h1>View repo: {{ item.id }}</h1>
+<div class="mb-10">
+<div>
+        <label>project_id: {{item.project_id}}</label>
+    </div>
+<div>
+        <label>name: {{item.name}}</label>
+    </div>
+<div>
+        <label>owner: {{item.owner}}</label>
+    </div>
+<div>
+        <label>stars: {{item.stars}}</label>
+    </div>
+<div>
+        <label>forks: {{item.forks}}</label>
+    </div>
+<div>
+        <label>issues: {{item.issues}}</label>
+    </div>
+<div>
+        <label>prs: {{item.prs}}</label>
+    </div>
+<div>
+        <label>contributors: {{item.contributors}}</label>
+    </div>
+<div>
+        <label>commits_last_30d: {{item.commits_last_30d}}</label>
+    </div>
+<div>
+        <label>watchers: {{item.watchers}}</label>
+    </div>
+<div>
+        <label>license: {{item.license}}</label>
+    </div>
+<div>
+        <label>last_fetch: {{item.last_fetch}}</label>
+    </div>
+<br />
+<a href="/repos">Back to repos</a>
+</div>
+{% endblock content %}
