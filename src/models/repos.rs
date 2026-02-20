@@ -32,12 +32,15 @@ impl Entity {
     pub async fn fetch_from_github(
         owner: &str,
         repo_name: &str,
-        token: &str,
+        token: Option<&str>,
         db: &DbConn,
     ) -> Result<Model, Box<dyn std::error::Error>> {
-        let octocrab = Octocrab::builder()
-            .personal_token(token.to_string())
-            .build()?;
+        let octocrab = match token {
+            Some(token) => Octocrab::builder()
+                .personal_token(token.to_string())
+                .build()?,
+            None => Octocrab::default(),
+        };
 
         let gh_repo: Repository = octocrab.repos(owner, repo_name).get().await?;
 
@@ -53,7 +56,6 @@ impl Entity {
             } else {
                 NotSet
             },
-
             last_fetch: Set(chrono::Utc::now().naive_utc()),
             ..Default::default()
         };
