@@ -5,19 +5,41 @@ use octocrab::{models::Repository, Octocrab};
 use sea_orm::entity::prelude::*;
 pub type Repos = Entity;
 
+use crate::models::projects::{ActiveModel as ProjectActiveModel, Model as ProjectModel};
+use chrono::Utc;
+use sea_orm::prelude::*;
+use sea_orm::TryIntoModel;
+
 #[async_trait::async_trait]
 impl ActiveModelBehavior for ActiveModel {
-    async fn before_save<C>(self, _db: &C, insert: bool) -> std::result::Result<Self, DbErr>
+    async fn before_save<C>(mut self, db: &C, insert: bool) -> Result<Self, DbErr>
     where
         C: ConnectionTrait,
     {
         if !insert && self.updated_at.is_unchanged() {
-            let mut this = self;
-            this.updated_at = sea_orm::ActiveValue::Set(chrono::Utc::now().into());
-            Ok(this)
-        } else {
-            Ok(self)
+            self.updated_at = Set(Utc::now().into());
         }
+
+        if insert && self.project_id.is_not_set() {
+            // ✅ try_as_ref() - reads WITHOUT consuming
+            let owner = self.owner.try_as_ref().unwrap().clone();
+            let name = self.name.try_as_ref().unwrap().clone();
+
+            let project: ProjectModel = ProjectActiveModel {
+                name: Set(format!("{} / {}", owner, name)),
+                owner: Set(owner),
+                health: Set(100.),
+                last_fetch: Set(Utc::now().naive_utc()),
+                ..Default::default()
+            }
+            .save(db)
+            .await?
+            .try_into_model()?;
+
+            self.project_id = Set(project.id);
+        }
+
+        Ok(self)
     }
 }
 
@@ -51,6 +73,9 @@ impl Entity {
             forks: Set(gh_repo.forks_count.unwrap_or(0) as i32),
             issues: Set(gh_repo.open_issues_count.unwrap_or(0) as i32),
             watchers: Set(gh_repo.watchers_count.unwrap_or(0) as i32),
+            prs: Set(0),              // ✅ Required by NOT NULL constraint
+            contributors: Set(0),     // ✅ Required by NOT NULL constraint
+            commits_last_30d: Set(0), // ✅ Required by NOT NULL constraint
             license: if let Some(license) = &gh_repo.license {
                 Set(Some(license.name.clone()))
             } else {

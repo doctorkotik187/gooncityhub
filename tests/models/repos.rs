@@ -1,11 +1,11 @@
 use gooncityhub::app::App;
-use loco_rs::testing::prelude::*;
-use serial_test::serial;
 use gooncityhub::models::repos::Entity;
-use sea_orm::EntityTrait;
-use sea_orm::ColumnTrait;
-use sea_orm::QueryFilter;
 use insta::assert_debug_snapshot;
+use loco_rs::testing::prelude::*;
+use sea_orm::ColumnTrait;
+use sea_orm::EntityTrait;
+use sea_orm::QueryFilter;
+use serial_test::serial;
 
 macro_rules! configure_insta {
     ($($expr:expr),*) => {
