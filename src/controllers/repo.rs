@@ -1,11 +1,11 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
-use loco_rs::prelude::*;
-use serde::{Deserialize, Serialize};
 use axum::response::Redirect;
 use axum_extra::extract::Form;
+use loco_rs::prelude::*;
 use sea_orm::{sea_query::Order, QueryOrder};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     models::_entities::repos::{ActiveModel, Column, Entity, Model},
@@ -26,23 +26,23 @@ pub struct Params {
     pub watchers: i32,
     pub license: Option<String>,
     pub last_fetch: DateTime,
-    }
+}
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-      item.project_id = Set(self.project_id);
-      item.name = Set(self.name.clone());
-      item.owner = Set(self.owner.clone());
-      item.stars = Set(self.stars);
-      item.forks = Set(self.forks);
-      item.issues = Set(self.issues);
-      item.prs = Set(self.prs);
-      item.contributors = Set(self.contributors);
-      item.commits_last_30d = Set(self.commits_last_30d);
-      item.watchers = Set(self.watchers);
-      item.license = Set(self.license.clone());
-      item.last_fetch = Set(self.last_fetch);
-      }
+        item.project_id = Set(self.project_id);
+        item.name = Set(self.name.clone());
+        item.owner = Set(self.owner.clone());
+        item.stars = Set(self.stars);
+        item.forks = Set(self.forks);
+        item.issues = Set(self.issues);
+        item.prs = Set(self.prs);
+        item.contributors = Set(self.contributors);
+        item.commits_last_30d = Set(self.commits_last_30d);
+        item.watchers = Set(self.watchers);
+        item.license = Set(self.license.clone());
+        item.last_fetch = Set(self.last_fetch);
+    }
 }
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
@@ -104,10 +104,7 @@ pub async fn show(
 }
 
 #[debug_handler]
-pub async fn add(
-    State(ctx): State<AppContext>,
-    Form(params): Form<Params>,
-) -> Result<Redirect> {
+pub async fn add(State(ctx): State<AppContext>, Form(params): Form<Params>) -> Result<Redirect> {
     let mut item = ActiveModel {
         ..Default::default()
     };
