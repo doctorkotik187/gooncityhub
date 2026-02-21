@@ -65,16 +65,7 @@ impl Entity {
         // Fetch main repo info
         let gh_repo: Repository = octocrab.repos(owner, repo_name).get().await?;
 
-        let prs_count: i32 = octocrab
-            .pulls(owner, repo_name)
-            .list()
-            .state(State::All)
-            .send()
-            .await?
-            .total_count
-            .unwrap_or(0) // handle None
-            .try_into() // now it's a u64 → i32 conversion
-            .expect("PR count fits i32");
+        let prs_count = octocrab.pulls(owner, repo_name).list().state(State::Open).send().await?.items.len();
 
         // Fetch contributors count
         let contributors_count = octocrab
@@ -100,7 +91,7 @@ impl Entity {
             forks: Set(gh_repo.forks_count.unwrap_or(0) as i32),
             issues: Set(gh_repo.open_issues_count.unwrap_or(0) as i32),
             watchers: Set(gh_repo.watchers_count.unwrap_or(0) as i32),
-            prs: Set(prs_count),
+            prs: Set(prs_count as i32),
             contributors: Set(contributors_count as i32),
             commits_last_30d: Set(commits.items.len() as i32),
             license: if let Some(license) = &gh_repo.license {

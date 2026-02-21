@@ -2,8 +2,8 @@
 
 ** NEXT ACTION
 
-- [ ] fetch all data for a repo
-
+- [x] fetch all data for a repo
+- [x] fix prs count, it is always 0 now
 
 ** Project Health
 

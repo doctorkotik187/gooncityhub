@@ -45,9 +45,9 @@ async fn test_fetch_github_repo() {
         .unwrap()
         .unwrap();
 
-    // Only snapshot stable fields
+    println!("{:#?}", repo);
     assert!(repo.stars > 0);
     assert!(repo.prs > 0);
-    insta::assert_debug_snapshot!(repo.name, @r#""octocrab""#);
-    insta::assert_debug_snapshot!(repo.owner, @"XAMPPRocky");
+    assert_eq!(repo.name, "octocrab");
+    assert_eq!(repo.owner, "XAMPPRocky");
 }
