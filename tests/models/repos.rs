@@ -6,6 +6,7 @@ use sea_orm::ColumnTrait;
 use sea_orm::EntityTrait;
 use sea_orm::QueryFilter;
 use serial_test::serial;
+use dotenvy::dotenv;
 
 macro_rules! configure_insta {
     ($($expr:expr),*) => {
@@ -21,9 +22,16 @@ async fn test_fetch_github_repo() {
     configure_insta!();
     let boot = boot_test::<App>().await.unwrap();
 
-    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN must be set"); // String
+    dotenv().ok();
 
-    let repo = Entity::fetch_from_github("XAMPPRocky", "octocrab", &token, &boot.app_context.db)
+    // Now you can safely read env vars
+    let github_token = std::env::var("GITHUB_TOKEN")
+        .expect("GITHUB_TOKEN must be set in .env");
+
+    println!("Loaded GITHUB_TOKEN (len={} chars)", github_token.len());
+
+
+    let repo = Entity::fetch_from_github("XAMPPRocky", "octocrab", &github_token, &boot.app_context.db)
         .await
         .expect("Should fetch repo successfully");
 

@@ -1752,6 +1752,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "chrono",
+ "dotenvy",
  "fluent-templates",
  "include_dir",
  "insta",

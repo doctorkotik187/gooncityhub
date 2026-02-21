@@ -41,6 +41,7 @@ unic-langid = { version = "0.9" }
 # /view engine
 axum-extra = { version = "0.10", features = ["form"] }
 octocrab = "0.49.5"
+dotenvy = "0.15.7"
 
 [[bin]]
 name = "gooncityhub-cli"
