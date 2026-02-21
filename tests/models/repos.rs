@@ -21,10 +21,9 @@ async fn test_fetch_github_repo() {
     configure_insta!();
     let boot = boot_test::<App>().await.unwrap();
 
-    let binding = std::env::var("GITHUB_TOKEN").ok();
-    let token = binding.as_deref();
+    let token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN must be set"); // String
 
-    let repo = Entity::fetch_from_github("XAMPPRocky", "octocrab", token, &boot.app_context.db)
+    let repo = Entity::fetch_from_github("XAMPPRocky", "octocrab", &token, &boot.app_context.db)
         .await
         .expect("Should fetch repo successfully");
 

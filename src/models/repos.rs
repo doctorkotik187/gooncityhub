@@ -1,11 +1,13 @@
 pub use super::_entities::repos::{ActiveModel, Entity, Model};
-use loco_rs::prelude::ActiveValue::NotSet;
 use loco_rs::prelude::Set;
 use octocrab::{models::Repository, Octocrab};
 pub type Repos = Entity;
 
 use crate::models::projects::{ActiveModel as ProjectActiveModel, Model as ProjectModel};
+use chrono::Duration;
 use chrono::Utc;
+use loco_rs::prelude::ActiveValue::NotSet;
+use octocrab::params::State;
 use sea_orm::prelude::*;
 use sea_orm::TryIntoModel;
 
@@ -53,17 +55,43 @@ impl Entity {
     pub async fn fetch_from_github(
         owner: &str,
         repo_name: &str,
-        token: Option<&str>,
+        token: &str, // Required token
         db: &DbConn,
     ) -> Result<Model, Box<dyn std::error::Error>> {
-        let octocrab = match token {
-            Some(token) => Octocrab::builder()
-                .personal_token(token.to_string())
-                .build()?,
-            None => Octocrab::default(),
-        };
+        let octocrab = Octocrab::builder()
+            .personal_token(token.to_string())
+            .build()?;
 
+        // Fetch main repo info
         let gh_repo: Repository = octocrab.repos(owner, repo_name).get().await?;
+
+        let prs_count: i32 = octocrab
+            .pulls(owner, repo_name)
+            .list()
+            .state(State::Open)
+            .send()
+            .await?
+            .total_count
+            .unwrap_or(0) // handle None
+            .try_into() // now it's a u64 → i32 conversion
+            .expect("PR count fits i32");
+
+        // Fetch contributors count
+        let contributors_count = octocrab
+            .repos(owner, repo_name)
+            .list_contributors()
+            .send()
+            .await?
+            .items
+            .len() as i32;
+
+        let commits = octocrab
+            .repos(owner, repo_name)
+            .list_commits()
+            .since(Utc::now().checked_sub_signed(Duration::days(30)).unwrap())
+            .per_page(100)
+            .send()
+            .await?;
 
         let model = ActiveModel {
             name: Set(gh_repo.name),
@@ -72,15 +100,15 @@ impl Entity {
             forks: Set(gh_repo.forks_count.unwrap_or(0) as i32),
             issues: Set(gh_repo.open_issues_count.unwrap_or(0) as i32),
             watchers: Set(gh_repo.watchers_count.unwrap_or(0) as i32),
-            prs: Set(0),              // ✅ Required by NOT NULL constraint
-            contributors: Set(0),     // ✅ Required by NOT NULL constraint
-            commits_last_30d: Set(0), // ✅ Required by NOT NULL constraint
+            prs: Set(prs_count),
+            contributors: Set(contributors_count as i32),
+            commits_last_30d: Set(commits.items.len() as i32),
             license: if let Some(license) = &gh_repo.license {
                 Set(Some(license.name.clone()))
             } else {
                 NotSet
             },
-            last_fetch: Set(chrono::Utc::now().naive_utc()),
+            last_fetch: Set(Utc::now().naive_utc()),
             ..Default::default()
         };
 
