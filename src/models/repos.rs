@@ -68,7 +68,7 @@ impl Entity {
         let prs_count: i32 = octocrab
             .pulls(owner, repo_name)
             .list()
-            .state(State::Open)
+            .state(State::All)
             .send()
             .await?
             .total_count

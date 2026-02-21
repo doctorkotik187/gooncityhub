@@ -3,3 +3,4 @@
 "cargo:sea-orm-cli" = "latest"
 just = "latest"
 rust = "latest"
+cargo-insta = "latest"
