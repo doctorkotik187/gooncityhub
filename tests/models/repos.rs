@@ -1,4 +1,3 @@
-use dotenvy::dotenv;
 use gooncityhub::app::App;
 use gooncityhub::models::repos::Entity;
 use loco_rs::testing::prelude::*;
@@ -21,21 +20,9 @@ async fn test_fetch_github_repo() {
     configure_insta!();
     let boot = boot_test::<App>().await.unwrap();
 
-    dotenv().ok();
-
-    // Now you can safely read env vars
-    let github_token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN must be set in .env");
-
-    println!("Loaded GITHUB_TOKEN (len={} chars)", github_token.len());
-
-    let repo = Entity::fetch_from_github(
-        "XAMPPRocky",
-        "octocrab",
-        &github_token,
-        &boot.app_context.db,
-    )
-    .await
-    .expect("Should fetch repo successfully");
+    let repo = Entity::fetch_from_github("XAMPPRocky", "octocrab", &boot.app_context.db)
+        .await
+        .expect("Should fetch repo successfully");
 
     // Verify saved to DB
     Entity::find()

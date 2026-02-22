@@ -1,15 +1,13 @@
 pub use super::_entities::repos::{ActiveModel, Entity, Model};
+use chrono::Utc;
 use loco_rs::prelude::Set;
-use octocrab::{models::Repository, Octocrab};
+use octocrab::{models::Repository, params::State, Octocrab};
+use sea_orm::prelude::*;
+use sea_orm::TryIntoModel;
+
 pub type Repos = Entity;
 
 use crate::models::projects::{ActiveModel as ProjectActiveModel, Model as ProjectModel};
-use chrono::Duration;
-use chrono::Utc;
-use loco_rs::prelude::ActiveValue::NotSet;
-use octocrab::params::State;
-use sea_orm::prelude::*;
-use sea_orm::TryIntoModel;
 
 #[async_trait::async_trait]
 impl ActiveModelBehavior for ActiveModel {
@@ -22,7 +20,6 @@ impl ActiveModelBehavior for ActiveModel {
         }
 
         if insert && self.project_id.is_not_set() {
-            // ✅ try_as_ref() - reads WITHOUT consuming
             let owner = self.owner.try_as_ref().unwrap().clone();
             let name = self.name.try_as_ref().unwrap().clone();
 
@@ -44,30 +41,30 @@ impl ActiveModelBehavior for ActiveModel {
     }
 }
 
-// implement your read-oriented logic here
-impl Model {}
-
-// implement your write-oriented logic here
-impl ActiveModel {}
-
-// implement your custom finders, selectors oriented logic here
 impl Entity {
+    /// Fetch repository from GitHub and persist in DB
     pub async fn fetch_from_github(
         owner: &str,
         repo_name: &str,
-        token: &str, // Required token
         db: &DbConn,
     ) -> Result<Model, Box<dyn std::error::Error>> {
-        let octocrab = Octocrab::builder()
-            .personal_token(token.to_string())
-            .build()?;
+        // Load GitHub token from environment
+        let token = std::env::var("GITHUB_TOKEN")?;
+        let octocrab = Octocrab::builder().personal_token(token).build()?;
 
-        // Fetch main repo info
+        // Fetch GitHub repository
         let gh_repo: Repository = octocrab.repos(owner, repo_name).get().await?;
 
-        let prs_count = octocrab.pulls(owner, repo_name).list().state(State::Open).send().await?.items.len();
+        // Fetch counts
+        let prs_count = octocrab
+            .pulls(owner, repo_name)
+            .list()
+            .state(State::Open)
+            .send()
+            .await?
+            .items
+            .len() as i32;
 
-        // Fetch contributors count
         let contributors_count = octocrab
             .repos(owner, repo_name)
             .list_contributors()
@@ -76,34 +73,51 @@ impl Entity {
             .items
             .len() as i32;
 
-        let commits = octocrab
+        let commits_last_30d = octocrab
             .repos(owner, repo_name)
             .list_commits()
-            .since(Utc::now().checked_sub_signed(Duration::days(30)).unwrap())
+            .since(Utc::now() - chrono::Duration::days(30))
             .per_page(100)
             .send()
-            .await?;
+            .await?
+            .items
+            .len() as i32;
 
-        let model = ActiveModel {
+        // Build model
+        let model =
+            Self::build_active_model(gh_repo, prs_count, contributors_count, commits_last_30d);
+
+        // Persist and return
+        Ok(model.save(db).await?.try_into()?)
+    }
+
+    /// Map GitHub repo + stats into ActiveModel
+    fn build_active_model(
+        gh_repo: Repository,
+        prs: i32,
+        contributors: i32,
+        commits_last_30d: i32,
+    ) -> ActiveModel {
+        ActiveModel {
             name: Set(gh_repo.name),
-            owner: Set(gh_repo.owner.unwrap().login),
+            owner: Set(gh_repo.owner.map(|o| o.login).unwrap_or_default()),
             stars: Set(gh_repo.stargazers_count.unwrap_or(0) as i32),
             forks: Set(gh_repo.forks_count.unwrap_or(0) as i32),
             issues: Set(gh_repo.open_issues_count.unwrap_or(0) as i32),
             watchers: Set(gh_repo.watchers_count.unwrap_or(0) as i32),
-            prs: Set(prs_count as i32),
-            contributors: Set(contributors_count as i32),
-            commits_last_30d: Set(commits.items.len() as i32),
-            license: if let Some(license) = &gh_repo.license {
-                Set(Some(license.name.clone()))
-            } else {
-                NotSet
-            },
+            prs: Set(prs),
+            contributors: Set(contributors),
+            commits_last_30d: Set(commits_last_30d),
+            license: gh_repo
+                .license
+                .map(|l| Set(Some(l.name)))
+                .unwrap_or(Set(None)),
             last_fetch: Set(Utc::now().naive_utc()),
             ..Default::default()
-        };
-
-        let saved_model: Model = model.save(db).await?.try_into()?;
-        Ok(saved_model)
+        }
     }
 }
+
+// Optional: keep empty impl blocks for read/write extensions
+impl Model {}
+impl ActiveModel {}
