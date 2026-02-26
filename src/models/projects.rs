@@ -19,7 +19,46 @@ impl ActiveModelBehavior for ActiveModel {
 }
 
 // implement your read-oriented logic here
-impl Model {}
+impl Model {
+    /// # Errors
+    ///
+    /// DB Error.
+    #[allow(clippy::cast_precision_loss)]
+    pub async fn recalculate_health<C>(&self, db: &C) -> Result<f32, DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        use sea_orm::EntityTrait;
+
+        // Fetch all repos for this project
+        let repos = crate::models::repos::Entity::find()
+            .filter(crate::models::_entities::repos::Column::ProjectId.eq(self.id))
+            .all(db)
+            .await?;
+
+        // Compute average health
+        let health = if repos.is_empty() {
+            100.0
+        } else {
+            let sum: f32 = repos
+                .iter()
+                .map(super::_entities::repos::Model::health)
+                .sum();
+            sum / repos.len() as f32
+        };
+
+        // Update self in DB
+        crate::models::projects::ActiveModel {
+            id: sea_orm::ActiveValue::Set(self.id),
+            health: sea_orm::ActiveValue::Set(health),
+            ..Default::default()
+        }
+        .update(db)
+        .await?;
+
+        Ok(health)
+    }
+}
 
 // implement your write-oriented logic here
 impl ActiveModel {}
