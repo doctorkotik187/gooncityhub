@@ -1,10 +1,16 @@
 * Coding Gamification
 
+** NEXT ACTION
+
+- [x] fetch all data for a repo
+- [x] fix prs count, it is always 0 now
+- [ ] compute project health
+
+** Project Health
+
 What is winning?
 
 Winning is determined by *Project Health*.
-
-** Project Health
 
 - Stars / Forks (user feedback)
 - Pick "random", important, hidden Issues, PRs and look how long it takes the project to fix them

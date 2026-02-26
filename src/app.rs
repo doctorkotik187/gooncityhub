@@ -40,6 +40,9 @@ impl Hooks for App {
         environment: &Environment,
         config: Config,
     ) -> Result<BootResult> {
+        if matches!(environment, Environment::Development | Environment::Test) {
+            dotenvy::dotenv().ok();
+        }
         create_app::<Self, Migrator>(mode, environment, config).await
     }
 
