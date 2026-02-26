@@ -4,7 +4,8 @@
 
 - [x] fetch all data for a repo
 - [x] fix prs count, it is always 0 now
-- [ ] compute project health
+- [x] compute project health
+- [ ] design matchmaking and mmr
 
 ** Project Health
 
@@ -43,3 +44,14 @@ Winning is determined by *Project Health*.
 - top contributors
 - history / everything recorded forever
 - post battle winner and loser have a "cooldown" period
+
+** 2026-02-27 Notes
+
+- battle uses the CoC system -> you choose to attack an opponent projects with similar HP (system shows you a few options)
+- we need ONLY HP as a metric for deciding the winner: A is 80HP, B is 75HP => END: A is 80HP, B is 79HP -> A won. Maintaining rank 1 is hard!
+- we want an exciting battle, when we can lose / attack HP. The idea is, that it applies a HP debuff, and you clearly see, absolute HP vs. debuff (castle destroyed)
+- the debuff can be removed / healed (castle repaired) by: waiting (small amount/time), active repair (working on project), help from other project? (healing), winning a battle?
+- projects and repos should have a MORALE in addition to HP, which shows the "team spirit" / "vibes" of the project
+- this MORALE can decide a lot of things and act as sugar, better recovery, better spot on leaderboard, a fire icon next to project, etc.
+- in battle we need RNG, very small, but still and bit of spice to get the crowd going!
+-
