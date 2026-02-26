@@ -4,6 +4,7 @@
 
 - [x] fetch all data for a repo
 - [x] fix prs count, it is always 0 now
+- [ ] compute project health
 
 ** Project Health
 
