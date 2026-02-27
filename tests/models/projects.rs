@@ -1,5 +1,6 @@
 use gooncityhub::app::App;
 use loco_rs::testing::prelude::*;
+use sea_orm::EntityTrait;
 use serial_test::serial;
 
 macro_rules! configure_insta {
@@ -12,20 +13,33 @@ macro_rules! configure_insta {
 
 #[tokio::test]
 #[serial]
-async fn test_model() {
+async fn test_calc_health() {
     configure_insta!();
 
     let boot = boot_test::<App>().await.unwrap();
     seed::<App>(&boot.app_context).await.unwrap();
 
-    // query your model, e.g.:
-    //
-    // let item = models::posts::Model::find_by_pid(
-    //     &boot.app_context.db,
-    //     "11111111-1111-1111-1111-111111111111",
-    // )
-    // .await;
+    let repo = gooncityhub::models::repos::Entity::fetch_from_github(
+        "XAMPPRocky",
+        "octocrab",
+        &boot.app_context.db,
+    )
+    .await
+    .expect("Should fetch repo successfully");
 
-    // snapshot the result:
-    // assert_debug_snapshot!(item);
+    let project = gooncityhub::models::projects::Entity::find_by_id(repo.project_id)
+        .one(&boot.app_context.db)
+        .await
+        .unwrap()
+        .expect("Project should exist");
+
+    let health = project
+        .recalculate_health(&boot.app_context.db)
+        .await
+        .expect("Health calculation should succeed");
+
+    println!("Repo Health: {:#?}", repo.health());
+    println!("Project Health: {:#?}", health);
+    assert!(health > 10.);
+    assert_eq!(repo.health(), health);
 }

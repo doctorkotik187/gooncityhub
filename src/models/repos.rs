@@ -15,10 +15,12 @@ impl ActiveModelBehavior for ActiveModel {
     where
         C: ConnectionTrait,
     {
+        // update timestamp
         if !insert && self.updated_at.is_unchanged() {
             self.updated_at = Set(Utc::now().into());
         }
 
+        // create project if needed
         if insert && self.project_id.is_not_set() {
             let owner = self.owner.try_as_ref().unwrap().clone();
             let name = self.name.try_as_ref().unwrap().clone();
@@ -35,6 +37,18 @@ impl ActiveModelBehavior for ActiveModel {
             .try_into_model()?;
 
             self.project_id = Set(project.id);
+        }
+
+        // recalculate project health if project_id exists
+        if let sea_orm::ActiveValue::Set(project_id) | sea_orm::ActiveValue::Unchanged(project_id) =
+            self.project_id
+        {
+            if let Some(project) = crate::models::projects::Entity::find_by_id(project_id)
+                .one(db)
+                .await?
+            {
+                let _ = project.recalculate_health(db).await;
+            }
         }
 
         Ok(self)
@@ -133,6 +147,28 @@ impl Entity {
     }
 }
 
-// Optional: keep empty impl blocks for read/write extensions
-impl Model {}
+impl Model {
+    #[allow(clippy::cast_possible_truncation)]
+    #[must_use]
+    pub fn health(&self) -> f32 {
+        // Convert all i32 fields to f64 once
+        let commits = f64::from(self.commits_last_30d);
+        let contributors = f64::from(self.contributors);
+        let prs = f64::from(self.prs);
+        let stars = f64::from(self.stars);
+        let issues = f64::from(self.issues);
+
+        // Compute normalized factors (clamped 0.0–1.0)
+        let activity = (commits / 30.0).min(1.0);
+        let community = (contributors / 10.0).min(1.0);
+        let adoption = (stars / 100.0).min(1.0);
+        let maintenance = (prs / 10.0 * (1.0 - (issues / 50.0).min(1.0))).min(1.0);
+
+        // Weighted sum
+        let score = activity * 0.35 + community * 0.25 + adoption * 0.15 + maintenance * 0.25;
+
+        // Scale to 0–100 and cast to f32 at the very end
+        (score * 100.0).clamp(0.0, 100.0) as f32
+    }
+}
 impl ActiveModel {}
